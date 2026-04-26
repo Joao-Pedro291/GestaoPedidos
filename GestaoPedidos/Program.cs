@@ -1,4 +1,6 @@
 using GestaoPedidos;
+using System.Data;
+using System.Data.SqlClient;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +19,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(options =>
         options.SwaggerEndpoint("/openapi/v1.json", "Gestao de Pedidos"));
 }
+
+
 
 app.UseHttpsRedirection();
 
