@@ -1,4 +1,4 @@
-using Dapper;
+﻿using Dapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using MySqlConnector;
@@ -8,38 +8,38 @@ namespace GestaoPedidos.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class ClienteController : ControllerBase
+    public class ProdutoController : ControllerBase
     {
         private readonly IConfiguration _configuration;
-        public ClienteController(IConfiguration configuration)
+        public ProdutoController(IConfiguration configuration)
         {
             _configuration = configuration;
         }
 
 
-        [HttpGet("GetCliente")]
-        public async Task<IActionResult> GetCliente()
+        [HttpGet("GetProduto")]
+        public async Task<IActionResult> GetProduto()
         {
             var conn = _configuration.GetConnectionString("DefaultConnection");
             IDbConnection connection = new MySqlConnection(conn);
 
-            var sql = "SELECT * FROM tb_cliente";
+            var sql = "SELECT * FROM TB_PRODUTO";
 
-            var clientes = await connection.QueryAsync<Cliente>(sql);
+            var produtos = await connection.QueryAsync<Produto>(sql);
 
-            return Ok(clientes);
+            return Ok(produtos);
         }
 
 
         [HttpPost]
-        public async Task<IActionResult> CriarCliente([FromBody] Cliente cliente)
+        public async Task<IActionResult> CriarProduto([FromBody] Produto produto)
         {
             var conn = _configuration.GetConnectionString("DefaultConnection");
             IDbConnection connection = new MySqlConnection(conn);
 
-            var sql = "INSERT INTO TB_CLIENTE (NOME, EMAIL) VALUES (@Nome, @Email)";
+            var sql = "INSERT INTO TB_PRODUTO (NOME, VALOR, ESTOQUE) VALUES (@Nome, @Valor, @Estoque)";
 
-            await connection.ExecuteAsync(sql, cliente);
+            await connection.ExecuteAsync(sql, produto);
 
             return Ok();
         }
@@ -47,32 +47,32 @@ namespace GestaoPedidos.Controllers
 
 
         [HttpGet ("{id:int}")]
-        public async Task<ActionResult<Cliente>> GetClientById( int id)
+        public async Task<ActionResult<Produto>> GetProdutoById(int id)
         {
             // Replace with your actual connection string
             var conn = _configuration.GetConnectionString("DefaultConnection");
             using var connection = new MySqlConnection(conn);
-            const string sql = "SELECT * FROM TB_CLIENTE WHERE Id = @id";
+            const string sql = "SELECT * FROM TB_PRODUTO WHERE Id = @id";
             // QueryFirstOrDefaultAsync handles opening/closing if needed, 
             // but wrapped in 'using' is best practice for connection management [2]
-            var client = await connection.QueryFirstOrDefaultAsync<Cliente>(sql, new { Id = id });
+            var produto = await connection.QueryFirstOrDefaultAsync<Produto>(sql, new { Id = id });
 
-            if (client == null)
+            if (produto == null)
             {
                 return NotFound();
             }
-            return Ok(client);
+            return Ok(produto);
         }
 
         [HttpDelete("{id:int}")]
-        public IActionResult DeleteCliente(int id)
+        public IActionResult DeleteProduto(int id)
         {
             // Define the MySQL connection string
             var conn = _configuration.GetConnectionString("DefaultConnection");
 
             using (var connection = new MySqlConnection(conn))
             {
-                string sql = "DELETE FROM TB_CLIENTE WHERE id = @Id";
+                string sql = "DELETE FROM TB_PRODUTO WHERE id = @Id";
 
                 // Execute the delete operation
                 int rowsAffected = connection.Execute(sql, new { Id = id });
@@ -86,9 +86,9 @@ namespace GestaoPedidos.Controllers
         }
 
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> UpdateCliente(int id, [FromBody] Cliente cliente)
+        public async Task<IActionResult> UpdateProduto(int id, [FromBody] Produto produto)
         {
-            string sql = "UPDATE TB_CLIENTE SET nome = @Nome, email = @Email WHERE id = @Id";
+            string sql = "UPDATE TB_PRODUTO SET nome = @Nome, valor = @Valor, estoque = @Estoque WHERE id = @Id";
 
             var conn = _configuration.GetConnectionString("DefaultConnection");
 
@@ -97,8 +97,9 @@ namespace GestaoPedidos.Controllers
                 // ExecuteAsync updates the record efficiently [7]
                 var affectedRows = await connection.ExecuteAsync(sql, new
                 {
-                    cliente.Nome,
-                    cliente.Email,
+                    produto.Nome,
+                    produto.Valor,
+                    produto.Estoque,
                     Id = id
                 });
 
@@ -106,20 +107,6 @@ namespace GestaoPedidos.Controllers
                 return NoContent();
             }
         }
-        //        using (var command = new MySqlCommand(sql))
-        //        {
-        //            command.Parameters.AddWithValue("@id", id);
-
-        //            }
-
-        //return NotFound();
-
-        //await using (var conn = new SqlConnection(conn))
-        //{
-        //    await connection.ExecuteAsync("SELECT * FROM TB_CLIENTE WHERE ID = @ID", new SqlParameter() { Value = 1, ParameterName = "ID" });
-        //}
-        //return Ok();
 
     }
-    }
-
+}
