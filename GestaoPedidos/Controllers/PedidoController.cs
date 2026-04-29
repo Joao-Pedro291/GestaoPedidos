@@ -37,7 +37,7 @@ namespace GestaoPedidos.Controllers
             var conn = _configuration.GetConnectionString("DefaultConnection");
             IDbConnection connection = new MySqlConnection(conn);
 
-            var sql = "INSERT INTO TB_PEDIDO (ID_CLIENTE, ID_PRODUTO, QUANTIDADE, VALOR_TOTAL, DATA_PEDIDO) VALUES (@ClienteId, @ProdutoId, @Quantidade, @ValorTotal, @DataPedido)";
+            var sql = "INSERT INTO TB_PEDIDO (CLIENTEID, PRODUTOID, QUANTIDADE, VALORTOTAL, DATAPEDIDO) VALUES (@ClienteId, @ProdutoId, @Quantidade, @ValorTotal, @DataPedido)";
 
             await connection.ExecuteAsync(sql, pedido);
 
@@ -47,32 +47,32 @@ namespace GestaoPedidos.Controllers
 
 
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<Cliente>> GetClientById(int id)
+        public async Task<ActionResult<Cliente>> GetPedidoById(int id)
         {
             // Replace with your actual connection string
             var conn = _configuration.GetConnectionString("DefaultConnection");
             using var connection = new MySqlConnection(conn);
-            const string sql = "SELECT * FROM TB_CLIENTE WHERE Id = @id";
+            const string sql = "SELECT * FROM TB_PEDIDO WHERE PEDIDOID = @id";
             // QueryFirstOrDefaultAsync handles opening/closing if needed, 
             // but wrapped in 'using' is best practice for connection management [2]
-            var client = await connection.QueryFirstOrDefaultAsync<Cliente>(sql, new { Id = id });
+            var pedido = await connection.QueryFirstOrDefaultAsync<Pedido>(sql, new { Id = id });
 
-            if (client == null)
+            if (pedido == null)
             {
                 return NotFound();
             }
-            return Ok(client);
+            return Ok(pedido);
         }
 
         [HttpDelete("{id:int}")]
-        public IActionResult DeleteCliente(int id)
+        public IActionResult DeletePedido(int id)
         {
             // Define the MySQL connection string
             var conn = _configuration.GetConnectionString("DefaultConnection");
 
             using (var connection = new MySqlConnection(conn))
             {
-                string sql = "DELETE FROM TB_CLIENTE WHERE id = @Id";
+                string sql = "DELETE FROM TB_PEDIDO WHERE PEDIDOID = @Id";
 
                 // Execute the delete operation
                 int rowsAffected = connection.Execute(sql, new { Id = id });
@@ -86,9 +86,9 @@ namespace GestaoPedidos.Controllers
         }
 
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> UpdateCliente(int id, [FromBody] Cliente cliente)
+        public async Task<IActionResult> UpdatePedido(int id, [FromBody] Pedido pedido)
         {
-            string sql = "UPDATE TB_CLIENTE SET nome = @Nome, email = @Email WHERE id = @Id";
+            string sql = "UPDATE TB_PEDIDO SET ClienteId = @ClienteId, ProdutoId = @ProdutoId, QUANTIDADE = @Quantidade, ValorTotal = @ValorTotal, DataPedido = @DataPedido  WHERE PedidoId = @Id";
 
             var conn = _configuration.GetConnectionString("DefaultConnection");
 
@@ -97,8 +97,11 @@ namespace GestaoPedidos.Controllers
                 // ExecuteAsync updates the record efficiently [7]
                 var affectedRows = await connection.ExecuteAsync(sql, new
                 {
-                    cliente.Nome,
-                    cliente.Email,
+                    pedido.ClienteId,
+                    pedido.ProdutoId,
+                    pedido.Quantidade,
+                    pedido.ValorTotal,
+                    pedido.DataPedido,
                     Id = id
                 });
 
