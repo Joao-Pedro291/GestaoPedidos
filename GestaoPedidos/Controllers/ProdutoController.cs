@@ -1,6 +1,5 @@
 ﻿using Dapper;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.SqlClient;
 using MySqlConnector;
 using System.Data;
 
@@ -49,12 +48,10 @@ namespace GestaoPedidos.Controllers
         [HttpGet ("{id:int}")]
         public async Task<ActionResult<Produto>> GetProdutoById(int id)
         {
-            // Replace with your actual connection string
             var conn = _configuration.GetConnectionString("DefaultConnection");
             using var connection = new MySqlConnection(conn);
             const string sql = "SELECT * FROM TB_PRODUTO WHERE Id = @id";
-            // QueryFirstOrDefaultAsync handles opening/closing if needed, 
-            // but wrapped in 'using' is best practice for connection management [2]
+            
             var produto = await connection.QueryFirstOrDefaultAsync<Produto>(sql, new { Id = id });
 
             if (produto == null)

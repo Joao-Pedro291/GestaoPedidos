@@ -1,6 +1,5 @@
 ﻿using Dapper;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.SqlClient;
 using MySqlConnector;
 using System.Data;
 
@@ -34,34 +33,117 @@ namespace GestaoPedidos.Controllers
         [HttpPost]
         public async Task<IActionResult> CriarPedido([FromBody] Pedido pedido)
         {
+            if (pedido.Quantidade == 0)
+            {
+                return BadRequest("A quantidade não pode ser 0");
+            }
+
             var conn = _configuration.GetConnectionString("DefaultConnection");
             IDbConnection connection = new MySqlConnection(conn);
 
-            var sql = "INSERT INTO TB_PEDIDO (CLIENTEID, PRODUTOID, QUANTIDADE, VALORTOTAL, DATAPEDIDO) VALUES (@ClienteId, @ProdutoId, @Quantidade, @ValorTotal, @DataPedido)";
+            const string sqlCliente = "SELECT * FROM TB_CLIENTE WHERE Id = @id";
+            var client = await connection.QueryFirstOrDefaultAsync<Cliente>(sqlCliente, new { Id = pedido.ClienteId });
 
-            await connection.ExecuteAsync(sql, pedido);
+            const string sqlProduto = "SELECT * FROM TB_PRODUTO WHERE Id = @id";
+            var produto = await connection.QueryFirstOrDefaultAsync<Produto>(sqlProduto, new { Id = pedido.ProdutoId });
 
-            return Ok();
+            if (pedido.Quantidade > produto.Estoque)
+            {
+                return BadRequest($"A quantidade nao pode ser maior que o estoque do produto que é {produto.Estoque}");
+            }
+
+            if (client != null && produto != null )
+            {
+                var valor = produto.Valor;
+                var valorTotal = valor * pedido.Quantidade;
+                pedido.ValorTotal = valorTotal;
+                var sql = "INSERT INTO TB_PEDIDO (CLIENTEID, PRODUTOID, QUANTIDADE, VALORTOTAL, DATAPEDIDO) VALUES (@ClienteId, @ProdutoId, @Quantidade, @ValorTotal, @DataPedido)";
+
+                await connection.ExecuteAsync(sql, pedido);
+
+                var sqlUpdateProduto = $"UPDATE TB_PRODUTO SET ESTOQUE = {produto.Estoque - pedido.Quantidade} WHERE ID = {produto.Id}";
+                await connection.ExecuteAsync(sqlUpdateProduto);
+                return Ok();
+
+            } else { return BadRequest("O cliente ou o produto não existem"); }
+
+        }
+
+        [HttpGet("RelatorioPorCliente/{idUsuario:int}")]
+        public async Task<ActionResult<Pedido>> GetPedidoByClienteId(int idUsuario)
+        {
+            var conn = _configuration.GetConnectionString("DefaultConnection");
+            using var connection = new MySqlConnection(conn);
+            var sql = $"SELECT tb_pedido.PEDIDOID AS 'IdPedido', " +
+                $"tb_cliente.NOME AS 'NomeCliente', " +
+                $"tb_produto.NOME AS 'NomeProduto', " +
+                $"tb_pedido.ValorTotal AS 'ValorTotal', " +
+                $"tb_pedido.DataPedido AS 'DataPedido' " +
+                $"FROM tb_pedido " +
+                $"INNER JOIN TB_PRODUTO " +
+                $"ON TB_PEDIDO.PRODUTOID = tb_produto.ID " +
+                $"INNER JOIN TB_CLIENTE " +
+                $"ON TB_PEDIDO.CLIENTEID = " +
+                $"TB_CLIENTE.ID WHERE TB_PEDIDO.CLIENTEID = {idUsuario}";
+            var pedidoLista = await connection.QueryAsync<PedidoResponse>(sql);
+
+            return Ok(pedidoLista);
+
+        }
+
+        [HttpGet("RelatorioPorProduto/{idProduto:int}")]
+        public async Task<ActionResult<Pedido>> GetPedidoByProdutoId(int idProduto)
+        {
+            var conn = _configuration.GetConnectionString("DefaultConnection");
+            using var connection = new MySqlConnection(conn);
+            var sql = $"SELECT tb_pedido.PEDIDOID AS 'IdPedido', " +
+                $"tb_cliente.NOME AS 'NomeCliente', " +
+                $"tb_produto.NOME AS 'NomeProduto', " +
+                $"tb_pedido.ValorTotal AS 'ValorTotal', " +
+                $"tb_pedido.DataPedido AS 'DataPedido' " +
+                $"FROM tb_pedido " +
+                $"INNER JOIN TB_PRODUTO " +
+                $"ON TB_PEDIDO.PRODUTOID = tb_produto.ID " +
+                $"INNER JOIN TB_CLIENTE " +
+                $"ON TB_PEDIDO.CLIENTEID = " +
+                $"TB_CLIENTE.ID WHERE TB_PEDIDO.PRODUTOID = {idProduto}";
+            var pedidoLista = await connection.QueryAsync<PedidoResponse>(sql);
+
+            return Ok(pedidoLista);
+
         }
 
 
-
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<Cliente>> GetPedidoById(int id)
+        public async Task<ActionResult<Pedido>> GetPedidoById(int id)
         {
-            // Replace with your actual connection string
             var conn = _configuration.GetConnectionString("DefaultConnection");
             using var connection = new MySqlConnection(conn);
             const string sql = "SELECT * FROM TB_PEDIDO WHERE PEDIDOID = @id";
-            // QueryFirstOrDefaultAsync handles opening/closing if needed, 
-            // but wrapped in 'using' is best practice for connection management [2]
+
             var pedido = await connection.QueryFirstOrDefaultAsync<Pedido>(sql, new { Id = id });
+
+            var sqlCliente = $"SELECT * FROM TB_CLIENTE WHERE ID = {pedido.ClienteId}";
+            var cliente = await connection.QueryFirstOrDefaultAsync<Cliente>(sqlCliente);
+
+            var sqlProduto = $"SELECT * FROM TB_PRODUTO WHERE ID = {pedido.ProdutoId}";
+            var produto = await connection.QueryFirstOrDefaultAsync<Produto>(sqlProduto);
 
             if (pedido == null)
             {
                 return NotFound();
+            } else
+            {
+                var pedidoResponse = new PedidoResponse()
+                {
+                    IdPedido = pedido.PedidoId,
+                    NomeCliente = cliente.Nome,
+                    NomeProduto = produto.Nome,
+                    ValorTotal = pedido.ValorTotal,
+                    DataPedido = pedido.DataPedido
+                };
+                return Ok(pedidoResponse);
             }
-            return Ok(pedido);
         }
 
         [HttpDelete("{id:int}")]

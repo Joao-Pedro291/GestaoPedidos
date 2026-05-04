@@ -46,8 +46,8 @@ namespace GestaoPedidos.Controllers
 
 
 
-        [HttpGet ("{id:int}")]
-        public async Task<ActionResult<Cliente>> GetClientById( int id)
+        [HttpGet("{id:int}")]
+        public async Task<ActionResult<Cliente>> GetClientById(int id)
         {
             // Replace with your actual connection string
             var conn = _configuration.GetConnectionString("DefaultConnection");
@@ -106,20 +106,5 @@ namespace GestaoPedidos.Controllers
                 return NoContent();
             }
         }
-        //        using (var command = new MySqlCommand(sql))
-        //        {
-        //            command.Parameters.AddWithValue("@id", id);
-
-        //            }
-
-        //return NotFound();
-
-        //await using (var conn = new SqlConnection(conn))
-        //{
-        //    await connection.ExecuteAsync("SELECT * FROM TB_CLIENTE WHERE ID = @ID", new SqlParameter() { Value = 1, ParameterName = "ID" });
-        //}
-        //return Ok();
-
     }
-    }
-
+}
