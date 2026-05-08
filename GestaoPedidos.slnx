@@ -1,3 +1,6 @@
 <Solution>
+  <Project Path="Application/Application.csproj" Id="9d4511df-3606-4345-91f0-a12f025c68d7" />
+  <Project Path="Domain/Domain.csproj" Id="e942d6b9-d142-485f-bc60-59b1eb7f5a50" />
   <Project Path="GestaoPedidos/GestaoPedidos.csproj" />
+  <Project Path="Infrastructure/Infrastructure.csproj" Id="6d2305d6-16ac-4462-80b6-913c065fbfa1" />
 </Solution>

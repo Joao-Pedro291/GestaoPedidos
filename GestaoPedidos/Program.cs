@@ -1,22 +1,37 @@
+using Domain.Interfaces;
+using GestaoPedidos.Infrastructure.Data;
+using Infrastructure.Repositories;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
+// Controllers
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+
+// 🔥 Swagger (forma padrão ASP.NET Core)
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+// 🔥 DI (injeção de dependência)
+builder.Services.AddScoped<IPedidoRepository, PedidoRepository>();
+builder.Services.AddScoped<PedidoService>();
+
+builder.Services.AddScoped<IProdutoRepository, ProdutoRepository>();
+builder.Services.AddScoped<ProdutoService>();
+
+builder.Services.AddSingleton<DbConnectionFactory>(sp =>
+    new DbConnectionFactory(
+        builder.Configuration.GetConnectionString("DefaultConnection")
+    )
+);
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Swagger pipeline
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
-    app.UseSwaggerUI(options =>
-        options.SwaggerEndpoint("/openapi/v1.json", "Gestao de Pedidos"));
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
-
-
 
 app.UseHttpsRedirection();
 

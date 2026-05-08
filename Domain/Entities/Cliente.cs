@@ -1,4 +1,4 @@
-namespace GestaoPedidos;
+namespace Domain.Entities;
 
 public class Cliente
 {

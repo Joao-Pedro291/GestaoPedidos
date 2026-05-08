@@ -1,4 +1,5 @@
 using Dapper;
+using Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using MySqlConnector;
