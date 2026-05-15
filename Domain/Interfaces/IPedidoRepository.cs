@@ -13,4 +13,7 @@ public interface IPedidoRepository
     Task Atualizar(Pedido pedido);
 
     Task Deletar(int id);
+
+    Task<bool> ExistePedidoComProduto(int produtoId);
+
 }

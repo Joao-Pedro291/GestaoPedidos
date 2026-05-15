@@ -3,10 +3,12 @@ using Domain.Interfaces;
 
 public class ProdutoService
 {
+    private readonly IPedidoRepository _repo;
     private readonly IProdutoRepository _produtoRepo;
 
-    public ProdutoService(IProdutoRepository produtoRepo)
+    public ProdutoService(IProdutoRepository produtoRepo, IPedidoRepository repo)
     {
+        _repo = repo;
         _produtoRepo = produtoRepo;
     }
 
@@ -34,5 +36,44 @@ public class ProdutoService
             Valor = p.Valor,
             Estoque = p.Id,
         }).ToList();
+    }
+
+    public async Task<Produto> BuscarPorId(int id)
+    {
+        var produto = await _produtoRepo.BuscarPorId(id);
+
+        if (produto == null)
+        {
+            return null;
+        }
+        return new Produto
+        {
+            Id = produto.Id,
+            Nome = produto.Nome,
+            Valor = produto.Valor,
+            Estoque = produto.Estoque
+        };
+
+    }
+
+    public async Task<(bool Sucesso, string? Erro)> Deletar(int id)
+    {
+        var produto = await _produtoRepo.BuscarPorId(id);
+
+        if (produto == null)
+        {
+            return (false, "Produto não encontrado");
+        }
+
+        var possuiPedidos = await _repo.ExistePedidoComProduto(id);
+
+        if (possuiPedidos)
+        {
+            return (false, "Produto está vinculado a pedidos");
+        }
+
+        await _produtoRepo.Deletar(id);
+
+        return (true, null);
     }
 }

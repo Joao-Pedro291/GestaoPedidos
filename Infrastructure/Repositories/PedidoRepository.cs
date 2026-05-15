@@ -50,4 +50,18 @@ public class PedidoRepository : IPedidoRepository
 
         await _connection.QueryFirstOrDefaultAsync<Pedido>(sql, new { Id = id });
     }
+
+    public async Task<bool> ExistePedidoComProduto(int produtoId)
+    {
+        var sql = @"
+        SELECT COUNT(*)
+        FROM TB_PEDIDO
+        WHERE ProdutoId = @produtoId";
+
+        var quantidade = await _connection.ExecuteScalarAsync<int>(
+             sql,
+             new { produtoId }
+         );
+        return quantidade > 0;
+    }
 }

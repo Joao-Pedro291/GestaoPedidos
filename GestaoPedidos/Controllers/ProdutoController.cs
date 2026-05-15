@@ -31,6 +31,32 @@ namespace GestaoPedidos.Controllers
 
             return Ok(produtos);
         }
+
+        [HttpGet("{id:int}")]
+        public async Task<ActionResult> GetById(int id) 
+        { 
+            var produto = await _service.BuscarPorId(id);
+
+            if (produto == null) 
+            {
+                return NotFound("Produto não encontrado");
+            }
+
+            return Ok(produto);
+        }
+
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var resultado = await _service.Deletar(id);
+
+            if (!resultado.Sucesso)
+            {
+                return BadRequest(resultado.Erro);
+            }
+
+            return NoContent();
+        }
     }
 }
 
