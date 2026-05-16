@@ -18,6 +18,9 @@ builder.Services.AddScoped<PedidoService>();
 builder.Services.AddScoped<IProdutoRepository, ProdutoRepository>();
 builder.Services.AddScoped<ProdutoService>();
 
+builder.Services.AddScoped<IClienteRepository, ClienteRepository>();
+builder.Services.AddScoped<ClienteService>();
+
 builder.Services.AddSingleton<DbConnectionFactory>(sp =>
     new DbConnectionFactory(
         builder.Configuration.GetConnectionString("DefaultConnection")

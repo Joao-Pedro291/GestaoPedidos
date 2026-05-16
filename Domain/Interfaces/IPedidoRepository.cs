@@ -16,4 +16,6 @@ public interface IPedidoRepository
 
     Task<bool> ExistePedidoComProduto(int produtoId);
 
+    Task<bool> ExistePedidoComCliente(int clienteId);
+
 }

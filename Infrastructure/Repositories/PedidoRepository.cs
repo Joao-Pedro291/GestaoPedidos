@@ -64,4 +64,19 @@ public class PedidoRepository : IPedidoRepository
          );
         return quantidade > 0;
     }
+
+    public async Task<bool> ExistePedidoComCliente(int clienteId)
+    {
+        var sql = @"
+        SELECT COUNT(*)
+        FROM TB_PEDIDO
+        WHERE ClienteId = @clienteId";
+
+        var quantidade = await _connection.ExecuteScalarAsync<int>(
+             sql,
+             new { clienteId }
+         );
+        return quantidade > 0;
+    }
+
 }

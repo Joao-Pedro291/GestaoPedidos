@@ -1,8 +1,5 @@
-namespace Domain.Entities;
-
-public class Cliente
+﻿public class CriarClienteDTO
 {
-    public int Id { get; set; }
     public required string Nome { get; set; }
     public required string Email { get; set; }
 }

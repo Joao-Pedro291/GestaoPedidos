@@ -24,6 +24,23 @@ public class ProdutoService
 
         await _produtoRepo.Criar(produto);
     }
+    public async Task<Produto> Atualizar(Produto produto)
+    {
+        var produtoExistente = await _produtoRepo.BuscarPorId(produto.Id);
+
+        if (produtoExistente == null) 
+        {
+            return null;
+        }
+
+        produtoExistente.Nome = produto.Nome;
+        produtoExistente.Estoque = produto.Estoque;
+        produtoExistente.Valor = produto.Valor;
+
+        await _produtoRepo.Atualizar(produtoExistente);
+
+        return produtoExistente;
+    }
 
     public async Task<List<ProdutoListagemDTO>> Listar() 
     {
@@ -46,6 +63,7 @@ public class ProdutoService
         {
             return null;
         }
+
         return new Produto
         {
             Id = produto.Id,
@@ -55,6 +73,7 @@ public class ProdutoService
         };
 
     }
+
 
     public async Task<(bool Sucesso, string? Erro)> Deletar(int id)
     {
@@ -76,4 +95,5 @@ public class ProdutoService
 
         return (true, null);
     }
+
 }
