@@ -26,8 +26,8 @@ public class PedidoRepository : IPedidoRepository
 
     public async Task<Pedido?> BuscarPorId(int id)
     {
-        var sql = "SELECT * FROM TB_PEDIDO WHERE PEDIDOID = @id";
-        return await _connection.QueryFirstOrDefaultAsync<Pedido>(sql, new { Id = id });
+        var sql = "SELECT * FROM TB_PEDIDO WHERE PEDIDOID = @PedidoId";
+        return await _connection.QueryFirstOrDefaultAsync<Pedido>(sql, new { PedidoId = id });
     }
 
     public async Task Criar(Pedido pedido)
@@ -39,7 +39,7 @@ public class PedidoRepository : IPedidoRepository
 
     public async Task Atualizar(Pedido pedido)
     {
-        var sql = "UPDATE TB_PEDIDO SET ClienteId = @ClienteId, ProdutoId = @ProdutoId, QUANTIDADE = @Quantidade, ValorTotal = @ValorTotal, DataPedido = @DataPedido  WHERE PedidoId = @Id";
+        var sql = "UPDATE TB_PEDIDO SET ClienteId = @ClienteId, ProdutoId = @ProdutoId, QUANTIDADE = @Quantidade, ValorTotal = @ValorTotal, DataPedido = @DataPedido  WHERE PedidoId = @PedidoId";
 
         await _connection.ExecuteAsync(sql, pedido);
     }

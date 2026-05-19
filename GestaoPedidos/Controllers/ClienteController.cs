@@ -25,7 +25,7 @@ namespace GestaoPedidos.Controllers
             return Ok();
         }
 
-        [HttpPut("PutCliente")]
+        [HttpPut("{id:int}")]
         public async Task<IActionResult> Atualizar(int id, Cliente cliente)
         {
             if (id != cliente.Id)
