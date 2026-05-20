@@ -1,0 +1,99 @@
+﻿using Domain.Entities;
+using Domain.Interfaces;
+
+public class ProdutoService
+{
+    private readonly IPedidoRepository _repo;
+    private readonly IProdutoRepository _produtoRepo;
+
+    public ProdutoService(IProdutoRepository produtoRepo, IPedidoRepository repo)
+    {
+        _repo = repo;
+        _produtoRepo = produtoRepo;
+    }
+
+    public async Task Criar(CriarProdutoDTO dto)
+    {
+        var produto = new Produto
+        {
+            Nome = dto.Nome,
+            Estoque = dto.Estoque,
+            Valor = dto.Valor,
+            
+        };
+
+        await _produtoRepo.Criar(produto);
+    }
+    public async Task<Produto> Atualizar(Produto produto)
+    {
+        var produtoExistente = await _produtoRepo.BuscarPorId(produto.Id);
+
+        if (produtoExistente == null) 
+        {
+            return null;
+        }
+
+        produtoExistente.Nome = produto.Nome;
+        produtoExistente.Estoque = produto.Estoque;
+        produtoExistente.Valor = produto.Valor;
+
+        await _produtoRepo.Atualizar(produtoExistente);
+
+        return produtoExistente;
+    }
+
+    public async Task<List<ProdutoListagemDTO>> Listar() 
+    {
+        var produtos = await _produtoRepo.Listar();
+
+        return produtos.Select(p => new ProdutoListagemDTO
+        {
+            Id = p.Id,
+            Nome = p.Nome,
+            Valor = p.Valor,
+            Estoque = p.Id,
+        }).ToList();
+    }
+
+    public async Task<Produto> BuscarPorId(int id)
+    {
+        var produto = await _produtoRepo.BuscarPorId(id);
+
+        if (produto == null)
+        {
+            return null;
+        }
+
+        return new Produto
+        {
+            Id = produto.Id,
+            Nome = produto.Nome,
+            Valor = produto.Valor,
+            Estoque = produto.Estoque
+        };
+
+    }
+
+
+    public async Task<(bool Sucesso, string? Erro)> Deletar(int id)
+    {
+        var produto = await _produtoRepo.BuscarPorId(id);
+
+        if (produto == null)
+        {
+            return (false, "Produto não encontrado");
+        }
+
+        var possuiPedidos = await _repo.ExistePedidoComProduto(id);
+
+        if (possuiPedidos)
+        {
+            return (false, "Produto está vinculado a pedidos");
+        }
+
+        await _produtoRepo.Deletar(id);
+
+        return (true, null);
+    }
+
+}

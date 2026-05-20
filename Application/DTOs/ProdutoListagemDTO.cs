@@ -1,8 +1,6 @@
-﻿namespace GestaoPedidos;
-
-public class Produto
+﻿public class ProdutoListagemDTO
 {
-    public required int Id { get; set; }
+    public int Id { get; set; }
     public required string Nome { get; set; }
     public int Valor { get; set; }
     public int Estoque { get; set; }

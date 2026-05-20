@@ -1,4 +1,5 @@
 using Dapper;
+using Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using MySqlConnector;
@@ -10,101 +11,72 @@ namespace GestaoPedidos.Controllers
     [Route("[controller]")]
     public class ClienteController : ControllerBase
     {
-        private readonly IConfiguration _configuration;
-        public ClienteController(IConfiguration configuration)
+        private readonly ClienteService _service;
+
+        public ClienteController(ClienteService service)
         {
-            _configuration = configuration;
+            _service = service;
         }
 
+        [HttpPost]
+        public async Task<IActionResult> Criar(CriarClienteDTO dto)
+        { 
+            await _service.Criar(dto);
+            return Ok();
+        }
 
-        [HttpGet("GetCliente")]
-        public async Task<IActionResult> GetCliente()
+        [HttpPut("{id:int}")]
+        public async Task<IActionResult> Atualizar(int id, Cliente cliente)
         {
-            var conn = _configuration.GetConnectionString("DefaultConnection");
-            IDbConnection connection = new MySqlConnection(conn);
+            if (id != cliente.Id)
+            {
+                return BadRequest("O id da rota é diferente do id do cliente");
+            }
 
-            var sql = "SELECT * FROM tb_cliente";
+            var clienteAtualizado = await _service.Atualizar(cliente);
 
-            var clientes = await connection.QueryAsync<Cliente>(sql);
+            if (clienteAtualizado == null)
+            {
+                return NotFound("Cliente não encontrado");
+            }
+
+            return Ok(clienteAtualizado);
+
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Listar()
+        {
+            var clientes = await _service.Listar();
 
             return Ok(clientes);
         }
 
-
-        [HttpPost]
-        public async Task<IActionResult> CriarCliente([FromBody] Cliente cliente)
-        {
-            var conn = _configuration.GetConnectionString("DefaultConnection");
-            IDbConnection connection = new MySqlConnection(conn);
-
-            var sql = "INSERT INTO TB_CLIENTE (NOME, EMAIL) VALUES (@Nome, @Email)";
-
-            await connection.ExecuteAsync(sql, cliente);
-
-            return Ok();
-        }
-
-
-
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<Cliente>> GetClientById(int id)
+        public async Task<ActionResult> GetById(int id)
         {
-            // Replace with your actual connection string
-            var conn = _configuration.GetConnectionString("DefaultConnection");
-            using var connection = new MySqlConnection(conn);
-            const string sql = "SELECT * FROM TB_CLIENTE WHERE Id = @id";
-            // QueryFirstOrDefaultAsync handles opening/closing if needed, 
-            // but wrapped in 'using' is best practice for connection management [2]
-            var client = await connection.QueryFirstOrDefaultAsync<Cliente>(sql, new { Id = id });
+            var cliente = await _service.BuscarPorId(id);
 
-            if (client == null)
+            if (cliente == null)
             {
-                return NotFound();
+                return NotFound("Cliente não encontrado");
             }
-            return Ok(client);
+
+            return Ok(cliente);
         }
 
         [HttpDelete("{id:int}")]
-        public IActionResult DeleteCliente(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            // Define the MySQL connection string
-            var conn = _configuration.GetConnectionString("DefaultConnection");
+            var resultado = await _service.Deletar(id);
 
-            using (var connection = new MySqlConnection(conn))
+            if (!resultado.Sucesso)
             {
-                string sql = "DELETE FROM TB_CLIENTE WHERE id = @Id";
-
-                // Execute the delete operation
-                int rowsAffected = connection.Execute(sql, new { Id = id });
-
-                if (rowsAffected > 0)
-                {
-                    return NoContent(); // 204
-                }
-                return NotFound(); // 404
+                return BadRequest(resultado.Erro);
             }
+
+            return NoContent();
         }
 
-        [HttpPut("{id:int}")]
-        public async Task<IActionResult> UpdateCliente(int id, [FromBody] Cliente cliente)
-        {
-            string sql = "UPDATE TB_CLIENTE SET nome = @Nome, email = @Email WHERE id = @Id";
-
-            var conn = _configuration.GetConnectionString("DefaultConnection");
-
-            using (var connection = new MySqlConnection(conn))
-            {
-                // ExecuteAsync updates the record efficiently [7]
-                var affectedRows = await connection.ExecuteAsync(sql, new
-                {
-                    cliente.Nome,
-                    cliente.Email,
-                    Id = id
-                });
-
-                if (affectedRows == 0) return NotFound();
-                return NoContent();
-            }
-        }
     }
 }

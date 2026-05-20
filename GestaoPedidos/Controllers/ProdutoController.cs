@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 using MySqlConnector;
 using System.Data;
@@ -9,101 +10,70 @@ namespace GestaoPedidos.Controllers
     [Route("[controller]")]
     public class ProdutoController : ControllerBase
     {
-        private readonly IConfiguration _configuration;
-        public ProdutoController(IConfiguration configuration)
+        private readonly ProdutoService _service;
+        public ProdutoController(ProdutoService service)
         {
-            _configuration = configuration;
-        }
-
-
-        [HttpGet("GetProduto")]
-        public async Task<IActionResult> GetProduto()
-        {
-            var conn = _configuration.GetConnectionString("DefaultConnection");
-            IDbConnection connection = new MySqlConnection(conn);
-
-            var sql = "SELECT * FROM TB_PRODUTO";
-
-            var produtos = await connection.QueryAsync<Produto>(sql);
-
-            return Ok(produtos);
+            _service = service;
         }
 
 
         [HttpPost]
-        public async Task<IActionResult> CriarProduto([FromBody] Produto produto)
+        public async Task<IActionResult> Criar(CriarProdutoDTO dto)
         {
-            var conn = _configuration.GetConnectionString("DefaultConnection");
-            IDbConnection connection = new MySqlConnection(conn);
-
-            var sql = "INSERT INTO TB_PRODUTO (NOME, VALOR, ESTOQUE) VALUES (@Nome, @Valor, @Estoque)";
-
-            await connection.ExecuteAsync(sql, produto);
-
+            await _service.Criar(dto);
             return Ok();
         }
 
-
-
-        [HttpGet ("{id:int}")]
-        public async Task<ActionResult<Produto>> GetProdutoById(int id)
+        [HttpPut("{id:int}")]
+        public async Task<IActionResult> Atualizar(int id, Produto produto)
         {
-            var conn = _configuration.GetConnectionString("DefaultConnection");
-            using var connection = new MySqlConnection(conn);
-            const string sql = "SELECT * FROM TB_PRODUTO WHERE Id = @id";
-            
-            var produto = await connection.QueryFirstOrDefaultAsync<Produto>(sql, new { Id = id });
-
-            if (produto == null)
+            if (id != produto.Id)
             {
-                return NotFound();
+                return BadRequest("O id da rota é diferente do id do produto");
             }
+
+            var produtoAtualizado = await _service.Atualizar(produto);
+
+            if (produtoAtualizado == null)
+            {
+                return NotFound("Produto não encontrado");
+            }
+
+            return Ok(produtoAtualizado);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Listar()
+        {
+            var produtos = await _service.Listar();
+
+            return Ok(produtos);
+        }
+
+        [HttpGet("{id:int}")]
+        public async Task<ActionResult> GetById(int id) 
+        { 
+            var produto = await _service.BuscarPorId(id);
+
+            if (produto == null) 
+            {
+                return NotFound("Produto não encontrado");
+            }
+
             return Ok(produto);
         }
 
         [HttpDelete("{id:int}")]
-        public IActionResult DeleteProduto(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            // Define the MySQL connection string
-            var conn = _configuration.GetConnectionString("DefaultConnection");
+            var resultado = await _service.Deletar(id);
 
-            using (var connection = new MySqlConnection(conn))
+            if (!resultado.Sucesso)
             {
-                string sql = "DELETE FROM TB_PRODUTO WHERE id = @Id";
-
-                // Execute the delete operation
-                int rowsAffected = connection.Execute(sql, new { Id = id });
-
-                if (rowsAffected > 0)
-                {
-                    return NoContent(); // 204
-                }
-                return NotFound(); // 404
+                return BadRequest(resultado.Erro);
             }
+
+            return NoContent();
         }
-
-        [HttpPut("{id:int}")]
-        public async Task<IActionResult> UpdateProduto(int id, [FromBody] Produto produto)
-        {
-            string sql = "UPDATE TB_PRODUTO SET nome = @Nome, valor = @Valor, estoque = @Estoque WHERE id = @Id";
-
-            var conn = _configuration.GetConnectionString("DefaultConnection");
-
-            using (var connection = new MySqlConnection(conn))
-            {
-                // ExecuteAsync updates the record efficiently [7]
-                var affectedRows = await connection.ExecuteAsync(sql, new
-                {
-                    produto.Nome,
-                    produto.Valor,
-                    produto.Estoque,
-                    Id = id
-                });
-
-                if (affectedRows == 0) return NotFound();
-                return NoContent();
-            }
-        }
-
     }
 }
