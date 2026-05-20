@@ -17,7 +17,7 @@ namespace GestaoPedidos.Controllers
         }
 
 
-        [HttpPost("PostProduto")]
+        [HttpPost]
         public async Task<IActionResult> Criar(CriarProdutoDTO dto)
         {
             await _service.Criar(dto);
@@ -42,7 +42,7 @@ namespace GestaoPedidos.Controllers
             return Ok(produtoAtualizado);
         }
 
-        [HttpGet("GetProduto")]
+        [HttpGet]
         public async Task<IActionResult> Listar()
         {
             var produtos = await _service.Listar();

@@ -18,7 +18,7 @@ namespace GestaoPedidos.Controllers
             _service = service;
         }
 
-        [HttpPost("PostCliente")]
+        [HttpPost]
         public async Task<IActionResult> Criar(CriarClienteDTO dto)
         { 
             await _service.Criar(dto);
@@ -44,7 +44,7 @@ namespace GestaoPedidos.Controllers
 
         }
 
-        [HttpGet("GetCliente")]
+        [HttpGet]
         public async Task<IActionResult> Listar()
         {
             var clientes = await _service.Listar();
